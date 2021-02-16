@@ -1,14 +1,15 @@
 <?php
 
 namespace App\Entity;
-use Symfony\Component\Validator\Constraints as Assert;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\CompetenceRepository;
 use Doctrine\Common\Collections\Collection;
 use ApiPlatform\Core\Annotation\ApiResource;
 use Doctrine\Common\Collections\ArrayCollection;
-use Symfony\Component\Validator\Constraints\Count;
+
 use Symfony\Component\Serializer\Annotation\Groups;
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 
 /**
  * @ORM\Entity(repositoryClass=CompetenceRepository::class)
@@ -33,9 +34,14 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *          "put" = {
  *              "path" = "/admin/competences/{id}",
  *              "denormalization_context" ={"groups"={"competence:write"}},
- *          }
- *      }
+ *          },
+ *          "delete" = {
+ *              "path" = "/admin/competences/{id}",
+ *              "denormalization_context" ={"groups"={"competence:write"}},
+ *               }
+ *           }
  *)
+ * @ApiFilter(SearchFilter::class, properties={"statut": "exact"})
  */
 class Competence
 {
@@ -48,7 +54,7 @@ class Competence
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, unique=true)
      * @Groups({"competence:write", "competences:read", "grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read"})
      */
     private $libelle;
@@ -59,11 +65,29 @@ class Competence
      */
     private $niveaux;
 
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups({"competence:write", "competences:read", "grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     */
+    private $description;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $statut;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=GroupeCompetence::class, inversedBy="competences", cascade = {"persist"})
+     * @Groups({"competence:write", "competences:read", "grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     */
+    private $groupeCompetence;
+
     public function __construct()
     {
+        $this->statut = 0;
         $this->niveau = new ArrayCollection();
-        $this->groupeCompetences = new ArrayCollection();
         $this->niveaux = new ArrayCollection();
+        $this->groupeCompetence = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -108,6 +132,54 @@ class Competence
                 $niveau->setCompetence(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): self
+    {
+        $this->description = $description;
+
+        return $this;
+    }
+
+    public function getStatut(): ?bool
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(bool $statut): self
+    {
+        $this->statut = isset($statut) ? $statut:false;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|GroupeCompetence[]
+     */
+    public function getGroupeCompetence(): Collection
+    {
+        return $this->groupeCompetence;
+    }
+
+    public function addGroupeCompetence(GroupeCompetence $groupeCompetence): self
+    {
+        if (!$this->groupeCompetence->contains($groupeCompetence)) {
+            $this->groupeCompetence[] = $groupeCompetence;
+        }
+
+        return $this;
+    }
+
+    public function removeGroupeCompetence(GroupeCompetence $groupeCompetence): self
+    {
+        $this->groupeCompetence->removeElement($groupeCompetence);
 
         return $this;
     }

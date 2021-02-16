@@ -2,13 +2,18 @@
 
 namespace App\Entity;
 
+use App\Entity\Competence;
+use App\Entity\Referentiel;
 use Doctrine\ORM\Mapping as ORM;
 use Doctrine\Common\Collections\Collection;
-use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\GroupeCompetenceRepository;
+use ApiPlatform\Core\Annotation\ApiResource;
+use Symfony\Component\Validator\Constraints as Assert;
 use ApiPlatform\Core\Annotation\ApiSubresource;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
+use ApiPlatform\Core\Annotation\ApiFilter;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 
 
 /**
@@ -25,7 +30,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *              "normalization_context" ={"groups"={"grpecompetence:read"}}
  *           },
  *          "POST" = {
- *              "path" = "/admin/grpecompetences"
+ *              "path" = "/admin/grpecompetences",
+ *              "normalization_context"={"groups"={"grpecompetence:read"}}
  *           }
  *      },
  *      itemOperations = {
@@ -39,9 +45,13 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *          },
  *          "put" = {
  *              "path" = "/admin/grpecompetences/{id}"
+ *          },
+ *          "delete" = {
+ *              "path" = "/admin/grpecompetences/{id}"
  *          }
  *      }
  * )
+ * @ApiFilter(SearchFilter::class, properties={"statut": "exact"})
  */
 class GroupeCompetence
 {
@@ -49,16 +59,9 @@ class GroupeCompetence
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     * @Groups({"grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read", "referentiel:write"})
      */
     private $id;
-
-    /**
-     * @ORM\ManyToMany(targetEntity=Competence::class, inversedBy="groupeCompetences", cascade={"persist"})
-     * @Groups({"grpecompetence:write", "grpecompetence:read", "briefs:read"})
-     * 
-     */
-    private $competence;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -67,44 +70,39 @@ class GroupeCompetence
     private $libelle;
 
     /**
-     * @ORM\ManyToOne(targetEntity=Referentiel::class, inversedBy="groupecompetence",cascade = {"persist"})
-     * @Groups({"grpecompetence:write", "briefs:read"})
+     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups({"grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read"})
      */
-    private $referentiel;
+    private $description;
+
+    /**
+     * @ORM\Column(type="boolean")
+     */
+    private $statut;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=Referentiel::class, mappedBy="groupeCompetence")
+     * 
+     */
+    private $referentiels;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=Competence::class, mappedBy="groupeCompetence", cascade = {"persist"})
+     * @Groups({"grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     */
+    private $competences;
 
     public function __construct()
     {
+        $this->statut = 0;
         $this->competence = new ArrayCollection();
         $this->referentiels = new ArrayCollection();
+        $this->competences = new ArrayCollection();
     }
 
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    /**
-     * @return Collection|Competence[]
-     */
-    public function getCompetence(): Collection
-    {
-        return $this->competence;
-    }
-
-    public function addCompetence(Competence $competence): self
-    {
-        if (!$this->competence->contains($competence)) {
-            $this->competence[] = $competence;
-        }
-
-        return $this;
-    }
-
-    public function removeCompetence(Competence $competence): self
-    {
-        $this->competence->removeElement($competence);
-
-        return $this;
     }
 
     public function getLibelle(): ?string
@@ -119,16 +117,83 @@ class GroupeCompetence
         return $this;
     }
 
-    public function getReferentiel(): ?Referentiel
+    public function getDescription(): ?string
     {
-        return $this->referentiel;
+        return $this->description;
     }
 
-    public function setReferentiel(?Referentiel $referentiel): self
+    public function setDescription(?string $description): self
     {
-        $this->referentiel = $referentiel;
+        $this->description = $description;
 
         return $this;
     }
+
+    public function getStatut(): ?bool
+    {
+        return $this->statut;
+    }
+
+    public function setStatut(bool $statut): self
+    {
+        $this->statut = isset($statut) ? $statut:false;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Referentiel[]
+     */
+    public function getReferentiels(): Collection
+    {
+        return $this->referentiels;
+    }
+
+    public function addReferentiel(Referentiel $referentiel): self
+    {
+        if (!$this->referentiels->contains($referentiel)) {
+            $this->referentiels[] = $referentiel;
+            $referentiel->addGroupeCompetence($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReferentiel(Referentiel $referentiel): self
+    {
+        if ($this->referentiels->removeElement($referentiel)) {
+            $referentiel->removeGroupeCompetence($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|Competence[]
+     */
+    public function getCompetences(): Collection
+    {
+        return $this->competences;
+    }
+
+    public function addCompetence(Competence $competence): self
+    {
+        if (!$this->competences->contains($competence)) {
+            $this->competences[] = $competence;
+            $competence->addGroupeCompetence($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCompetence(Competence $competence): self
+    {
+        if ($this->competences->removeElement($competence)) {
+            $competence->removeGroupeCompetence($this);
+        }
+
+        return $this;
+    }
+
 
 }

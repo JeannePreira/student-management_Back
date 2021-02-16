@@ -25,7 +25,7 @@ class Niveau
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, unique=true)
      * @Groups({"competence:write", "competences:read", "grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "brief:read", "briefs:read"})
      */
     private $libelle;
@@ -37,9 +37,21 @@ class Niveau
 
     /**
      * @ORM\ManyToOne(targetEntity=Competence::class, inversedBy="niveaux", cascade = {"persist"})
-     *@Groups({"competence:write", "grpecompetence:write", "grpecompetence:read", "referentiel:write", "brief:read", "briefs:read"})
+     *@Groups({"competence:write", "grpecompetence:write", "grpecompetence:read", "referentiel:write", "brief:read", "briefs:read",})
      */
     private $competence;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Groups({"competence:write", "competences:read", "grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "brief:read", "briefs:read"})
+     */
+    private $groupeAction;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Groups({"competence:write", "competences:read", "grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "brief:read", "briefs:read"})
+     */
+    private $critereEvaluation;
 
     public function __construct()
     {
@@ -96,6 +108,30 @@ class Niveau
     public function setCompetence(?Competence $competence): self
     {
         $this->competence = $competence;
+
+        return $this;
+    }
+
+    public function getGroupeAction(): ?string
+    {
+        return $this->groupeAction;
+    }
+
+    public function setGroupeAction(string $groupeAction): self
+    {
+        $this->groupeAction = $groupeAction;
+
+        return $this;
+    }
+
+    public function getCritereEvaluation(): ?string
+    {
+        return $this->critereEvaluation;
+    }
+
+    public function setCritereEvaluation(string $critereEvaluation): self
+    {
+        $this->critereEvaluation = $critereEvaluation;
 
         return $this;
     }

@@ -1,13 +1,16 @@
 <?php
 
 namespace App\Entity;
-
 use Doctrine\ORM\Mapping as ORM;
-use App\Repository\ProfilRepository;
+use ApiPlatform\Core\Annotation\ApiFilter;
 use Doctrine\Common\Collections\Collection;
 use ApiPlatform\Core\Annotation\ApiResource;
+use App\Repository\ProfilRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Validator\Constraints as Assert;
+use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 
 /**
  * @ORM\Entity(repositoryClass=ProfilRepository::class)
@@ -46,6 +49,8 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *          }
  *      }
  * )
+ * 
+ * @ApiFilter(SearchFilter::class, properties={"statut": "exact"})
  */
 class Profil
 {
@@ -60,24 +65,25 @@ class Profil
 
     /**
      * @ORM\Column(type="boolean")
+     * Groups({"user:read"})
      */
     private $statut;
 
-   
-
     /**
-     * @ORM\OneToMany(targetEntity=User::class, mappedBy="profil")
-     * @Groups({"groupPut:write"})
-     */
-    private $users;
-
-    /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, unique=true)
+     * @Groups({"users:read"})
+     * @Assert\NotBlank
      */
     private $libelle;
 
+    /**
+     * @ORM\OneToMany(targetEntity=User::class, mappedBy="profil")
+     */
+    private $users;
+
     public function __construct()
     {
+        $this->statut = 0;
         $this->users = new ArrayCollection();
     }
 
@@ -93,7 +99,19 @@ class Profil
 
     public function setStatut(bool $statut): self
     {
-        $this->statut = $statut;
+        $this->statut = isset($statut) ? $statut:false;
+      
+        return $this;
+    }
+
+    public function getLibelle(): ?string
+    {
+        return $this->libelle;
+    }
+
+    public function setLibelle(string $libelle): self
+    {
+        $this->libelle = $libelle;
 
         return $this;
     }
@@ -124,18 +142,6 @@ class Profil
                 $user->setProfil(null);
             }
         }
-
-        return $this;
-    }
-
-    public function getLibelle(): ?string
-    {
-        return $this->libelle;
-    }
-
-    public function setLibelle(string $libelle): self
-    {
-        $this->libelle = $libelle;
 
         return $this;
     }

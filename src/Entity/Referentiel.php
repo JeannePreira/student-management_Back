@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Entity\Promo;
+use Symfony\Component\Validator\Constraints as Assert;
 use App\Entity\GroupeCompetence;
 use Doctrine\ORM\Mapping as ORM;
 use App\Repository\ReferentielRepository;
@@ -25,9 +26,12 @@ use Symfony\Component\Serializer\Annotation\Groups;
  *              "path": "/admin/referentiel/grpecompetences",
  *              "normalization_context" = {"groups"={"referentiel:read"}}
  *          },
- *          "POST" = {
- *              "path": "/admin/referentiel"
- *          }
+ *          "adReferentiel" = {
+ *              "method": "POST",
+ *              "path" = "/admin/referentiel",
+ *              "normalization_context" = {"groups"={"referentiel:write"}},
+ *               "deserialize" = false
+ *           }
  *      },
  *      itemOperations = {
  *          "get"= {
@@ -57,8 +61,9 @@ class Referentiel
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=255, unique=true)
      * @Groups({"groupe:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     * @Assert\NotBlank
      */
     private $libelle;
 
@@ -69,16 +74,46 @@ class Referentiel
     private $promos;
 
     /**
-     * @ORM\OneToMany(targetEntity=GroupeCompetence::class, mappedBy="referentiel", cascade = {"persist"})
-     * @Groups({"grpecompetence:write", "referentiel:write", "referentiel:read"})
+     * @ORM\Column(type="string", length=255)
+     * @Groups({"groupe:read", "referentiel:write", "referentiel:read", "briefs:read"})
      */
-    private $groupecompetence;
+    private $critereEvaluation;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Groups({"groupe:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     */
+    private $critereAdmission;
+
+    /**
+     * @ORM\Column(type="string", length=255)
+     * @Groups({"groupe:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     */
+    private $presentation;
+
+    /**
+     * @ORM\Column(type="blob")
+     */
+    private $programme;
+
+    /**
+     * @ORM\Column(type="boolean")
+     * @Groups({"groupe:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     */
+    private $deleted;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=GroupeCompetence::class, inversedBy="referentiels")
+     * @Groups({"groupe:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     */
+    private $groupeCompetence;
 
     public function __construct()
     {
         $this->promo = new ArrayCollection();
         $this->groupecompetence = new ArrayCollection();
         $this->promos = new ArrayCollection();
+        $this->groupeCompetence = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -128,32 +163,86 @@ class Referentiel
         return $this;
     }
 
+    public function getCritereEvaluation(): ?string
+    {
+        return $this->critereEvaluation;
+    }
+
+    public function setCritereEvaluation(string $critereEvaluation): self
+    {
+        $this->critereEvaluation = $critereEvaluation;
+
+        return $this;
+    }
+
+    public function getCritereAdmission(): ?string
+    {
+        return $this->critereAdmission;
+    }
+
+    public function setCritereAdmission(string $critereAdmission): self
+    {
+        $this->critereAdmission = $critereAdmission;
+
+        return $this;
+    }
+
+    public function getPresentation(): ?string
+    {
+        return $this->presentation;
+    }
+
+    public function setPresentation(string $presentation): self
+    {
+        $this->presentation = $presentation;
+
+        return $this;
+    }
+
+    public function getProgramme()
+    {
+        return $this->programme;
+    }
+
+    public function setProgramme($programme): self
+    {
+        $this->programme = $programme;
+
+        return $this;
+    }
+
+    public function getDeleted(): ?bool
+    {
+        return $this->deleted;
+    }
+
+    public function setDeleted(bool $deleted): self
+    {
+        $this->deleted = $deleted;
+
+        return $this;
+    }
+
     /**
      * @return Collection|GroupeCompetence[]
      */
-    public function getGroupecompetence(): Collection
+    public function getGroupeCompetence(): Collection
     {
-        return $this->groupecompetence;
+        return $this->groupeCompetence;
     }
 
-    public function addGroupecompetence(GroupeCompetence $groupecompetence): self
+    public function addGroupeCompetence(GroupeCompetence $groupeCompetence): self
     {
-        if (!$this->groupecompetence->contains($groupecompetence)) {
-            $this->groupecompetence[] = $groupecompetence;
-            $groupecompetence->setReferentiel($this);
+        if (!$this->groupeCompetence->contains($groupeCompetence)) {
+            $this->groupeCompetence[] = $groupeCompetence;
         }
 
         return $this;
     }
 
-    public function removeGroupecompetence(GroupeCompetence $groupecompetence): self
+    public function removeGroupeCompetence(GroupeCompetence $groupeCompetence): self
     {
-        if ($this->groupecompetence->removeElement($groupecompetence)) {
-            // set the owning side to null (unless already changed)
-            if ($groupecompetence->getReferentiel() === $this) {
-                $groupecompetence->setReferentiel(null);
-            }
-        }
+        $this->groupeCompetence->removeElement($groupeCompetence);
 
         return $this;
     }
