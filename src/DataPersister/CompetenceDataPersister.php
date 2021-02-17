@@ -34,14 +34,17 @@ final class CompetenceDataPersister implements ContextAwareDataPersisterInterfac
 
     public function remove($data, array $context = [])
     {
-        // $competence = $this->competenceRepo->findOneById($data);
-        // $competence->getGroupeCompetence();
-        $data->setStatut(1);
-        
+        // $data = $request->request->all();
+        $competence = $this->competenceRepo->findOneById($data);
+        $grpeCompetence = $competence->getGroupeCompetence();
+        foreach($grpeCompetence as $value){
+            $competence->removeGroupeCompetence($value);
+        }
+        $competence->setStatut(1);
         // dd($competence);
-            $this->manager->persist($data);
+            $this->manager->persist($competence);
             $this->manager->flush();
 
-            return $data;
+            return $competence;
     }
 }

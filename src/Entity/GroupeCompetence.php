@@ -59,13 +59,13 @@ class GroupeCompetence
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read", "referentiel:write"})
+     * @Groups({"grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read", "referentiel:write", "competence:write", "comp:read"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     * @Groups({"grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read", "competences:read", "competence:write"})
      */
     private $libelle;
 
@@ -82,22 +82,22 @@ class GroupeCompetence
 
     /**
      * @ORM\ManyToMany(targetEntity=Referentiel::class, mappedBy="groupeCompetence")
+     * @Groups({"grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read", "competences:read"})
      * 
      */
     private $referentiels;
 
     /**
      * @ORM\ManyToMany(targetEntity=Competence::class, mappedBy="groupeCompetence", cascade = {"persist"})
-     * @Groups({"grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     * @Groups({"grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read", "competences:read", "competence:write"})
      */
-    private $competences;
+    private $competence;
 
     public function __construct()
     {
         $this->statut = 0;
         $this->competence = new ArrayCollection();
         $this->referentiels = new ArrayCollection();
-        $this->competences = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -171,15 +171,15 @@ class GroupeCompetence
     /**
      * @return Collection|Competence[]
      */
-    public function getCompetences(): Collection
+    public function getCompetence(): Collection
     {
-        return $this->competences;
+        return $this->competence;
     }
 
     public function addCompetence(Competence $competence): self
     {
-        if (!$this->competences->contains($competence)) {
-            $this->competences[] = $competence;
+        if (!$this->competence->contains($competence)) {
+            $this->competence[] = $competence;
             $competence->addGroupeCompetence($this);
         }
 
@@ -188,12 +188,11 @@ class GroupeCompetence
 
     public function removeCompetence(Competence $competence): self
     {
-        if ($this->competences->removeElement($competence)) {
+        if ($this->competence->removeElement($competence)) {
             $competence->removeGroupeCompetence($this);
         }
 
         return $this;
     }
-
 
 }

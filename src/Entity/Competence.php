@@ -49,7 +49,7 @@ class Competence
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"competences:read","grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     * @Groups({"competences:read","grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read", "competence:write"})
      */
     private $id;
 
@@ -77,10 +77,12 @@ class Competence
     private $statut;
 
     /**
-     * @ORM\ManyToMany(targetEntity=GroupeCompetence::class, inversedBy="competences", cascade = {"persist"})
-     * @Groups({"competence:write", "competences:read", "grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read"})
+     * @ORM\ManyToMany(targetEntity=GroupeCompetence::class, inversedBy="competence", cascade = {"persist"})
+     * @Groups({"competence:write", "competences:read", "grpecompetence:write", "grpecompetence:read", "referentiel:write", "referentiel:read", "briefs:read", "comp:read"})
      */
     private $groupeCompetence;
+
+
 
     public function __construct()
     {
@@ -183,5 +185,6 @@ class Competence
 
         return $this;
     }
+
 
 }

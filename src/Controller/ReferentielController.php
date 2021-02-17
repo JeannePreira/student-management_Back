@@ -37,7 +37,7 @@ class ReferentielController extends AbstractController
         if(!($Referentiel instanceof Referentiel)){
             return new JsonResponse($Referentiel, Response::HTTP_BAD_REQUEST);
         }
-
+        
         $manager->persist($Referentiel);
         $manager->flush();
 
